@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 const NoteSchema = new Schema({
     body: String,
     date: { type: Date, unique: true},
-    user_id = String
+    user_id: String
 })
 
 NoteSchema.pre('save', function(next) {
@@ -16,4 +16,16 @@ NoteSchema.pre('save', function(next) {
     next();
 });
 
-module.exports = mongoose.model('Note', NoteSchema)
+NoteSchema.statics.get_notes = function(user_id, callback) {
+    Note.findSome({}, {user_id:user_id})
+    .exec(function(err, notes) {
+        if (err) {
+            return callback(err);
+        }
+        return callback(err, notes);
+    });
+}
+
+Note = mongoose.model('Note', NoteSchema)
+
+module.exports = Note

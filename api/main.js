@@ -62,14 +62,14 @@ router.route('/users').post(function(req, res) {
     user.save(function(err) {
         if (err)
             res.status(400).json(err);
-        res.status(200).json({message: 'Created new user ' + user.username + '!'});
+        res.status(200).json({message: 'Created new user ' + user.email + '!'});
     });
 });
 
 //Create new note
 router.route('/notes').post(function(req, res) {
     if (!req.session) {
-        res.status(401).json({message:'Not authenticated'})
+        res.status(401).json({message:'Not authenticated'});
     }
     let note = new Note();
     note.body = req.body.body;
@@ -82,4 +82,16 @@ router.route('/notes').post(function(req, res) {
         }
         res.status(200).json({message:'Created new note for ' + note.date + '!'});
     })
+});
+
+router.route('/notes').get(function(req, res) {
+    if (!req.session) {
+        res.status(401).json({message:'Not authenticated'});
+    }
+    notes = Note.get_notes(req.session.userId, function(err, notes){
+        if (err) {
+            res.status(400).json({message:err.message});
+        }
+        res.status(200).json({message:notes});
+    });
 });
