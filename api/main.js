@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const moment = require('moment');
 const config = require('../api/config')
 
 
@@ -44,12 +45,13 @@ router.post('/login', function(req, res) {
     User.authenticate(req.body.email, req.body.password, function(err, user) {
         if (err) {
             console.log(err);
-            res.status(400).json({message:err.message});
+            res.status(err.status).json({message:err.message});
+        } else {
+            let token = jwt.sign({id:user._id}, config.secret, {
+                expiresIn: 86400
+            });
+            res.json({message:'Logged in', token: token, auth: true});
         }
-        let token = jwt.sign({id:user._id}, config.secret, {
-            expiresIn: 86400
-        });
-        res.json({message:'Logged in', token: token, auth: true});
     });
 });
 
@@ -58,12 +60,12 @@ router.route('/users').post(function(req, res) {
     let user = new User();
     user.email = req.body.email;
     if (req.body.password.length < 8) {
+        console.log(req.body.password);
         res.status(400).json({message:'Password too short'});
     }
     user.password_hash = req.body.password;
-    user.first_name = req.body.first_name;
-    user.last_name = req.body.last_name;
-    user.phone_number = req.body.phone_number;
+    user.name = req.body.name;
+    user.phoneNumber = req.body.phoneNumber;
     user.save(function(err) {
         if (err)
             res.status(400).json(err);
@@ -85,7 +87,31 @@ router.route('/notes').post(function(req, res) {
     let note = new Note();
     note.body = req.body.body;
     note.date = req.body.date;
-    note.user_id = token.id;
+    console.log(token);
+    note.userId = token.id;
+    let today = new Date();
+    console.log('Today ' + today);
+    console.log('From note ' + moment(req.body.date));
+    let dd = today.getDate();
+    let mm = today.getMonth() + 1;
+    let yyyy = today.getFullYear();
+
+    if (dd < 10) {
+        dd = '0' + dd;
+    }
+    if (mm < 10) {
+        mm = '0' + mm;
+    }
+    
+    today = dd + '/' + mm + '/' + yyyy;
+
+    if (moment(req.body.date).format("YYYY-MM-DD") === today) {
+        note.canEdit = true;
+    } else {
+        note.canEdit = false;
+    }
+
+    Note.updateRecentNote(req.body.date);
 
     note.save(function(err) {
         if (err) {
@@ -106,20 +132,37 @@ router.route('/notes').get(function(req, res) {
         if (err) {
             res.status(400).json({message:err.message});
         }
-        res.status(200).json({message:notes});
+        arr = [...notes];
+        arr.forEach(function(element) {
+            if (element['body'].length >= 40) {
+                element['body'] = element['body'].substring(0, 40) + '...';
+            } else {
+                element['body'] = element['body'].substring(0, 40);
+            }
+        });
+        res.status(200).json(arr);
     });
 });
  
-router.route('/notes/:note_id').get(function(req, res) {
+router.route('/notes/:noteId').get(function(req, res) {
     let token = req.headers['x-access-token'];
     if (!token) return res.status(401).send({auth:false, message:'No token'});
     jwt.verify(token, config.secret, function(err, decoded) {
         if (err) return res.status(401).send({auth: false, message:'Failed to authenticate'});
     });
-    Note.getNoteFromID(req.params.note_id, function(err, note) {
+    Note.getNoteFromID(req.params.noteId, function(err, note) {
         if (err) {
             res.status(400).json({message:err.message});
         }
         res.status(200).json({message:note});
     });
+});
+
+router.route('/notes/:noteId').put(function(req, res) {
+    let token = req.headers['x-access-token'];
+    if (!token) return res.status(401).send({auth:false, message:'No token'});
+    jwt.verify(token, config.secret, function(err, decoded) {
+        if (err) return res.status(401).send({auth: false, message:'Failed to authenticate'});
+    });
+
 });

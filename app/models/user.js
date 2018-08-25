@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 var UserSchema = new Schema({
     password_hash: String,
     name: String,
-    phone_number: String,
+    phoneNumber: String,
     email: {type: String, unique: true}
 });
 
@@ -27,7 +27,7 @@ UserSchema.statics.authenticate = function (email, password, callback) {
             return callback(err)
         } else if (!user) {
             let err = new Error('User not found');
-            err.status = 401;
+            err.status = 400;
             return callback(err);
         }
         bcrypt.compare(password, user.password_hash, function(err, result) {

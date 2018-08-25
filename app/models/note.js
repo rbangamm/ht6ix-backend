@@ -5,19 +5,20 @@ const Schema = mongoose.Schema;
 const NoteSchema = new Schema({
     body: String,
     date: { type: Date, unique: true},
-    user_id: String
+    userId: String,
+    canEdit: Boolean
 })
 
 NoteSchema.pre('save', function(next) {
     let note = this;
     let timediff = new Date().getTimezoneOffset();
-    date = moment(note.date).format("DD//MM//YYYY");
+    date = moment(note.date).format("YYYY-MM-DD");
     note.date = date;
     next();
 });
 
-NoteSchema.statics.getNotes = function(user_id, callback) {
-    Note.find({user_id:user_id})
+NoteSchema.statics.getNotes = function(userId, callback) {
+    Note.find({userId:userId})
     .exec(function(err, notes) {
         if (err) {
             return callback(err);
@@ -26,14 +27,19 @@ NoteSchema.statics.getNotes = function(user_id, callback) {
     });
 }
 
-NoteSchema.statics.getNoteFromID = function(note_id, callback) {
-    Note.findOne({_id:note_id})
-    .exec(function(err, notes) {
+NoteSchema.statics.getNoteFromID = function(noteId, callback) {
+    Note.findOne({_id:noteId})
+    .exec(function(err, note) {
         if (err) {
             return callback(err);
         }
         return callback(null, note)
     });
+}
+
+NoteSchema.statics.updateRecentNote = function(date) {
+    Note.update({date:{$ne:date}}, {$set: {canEdit:false}});
+    Note.update({date:date}, {$set: {canEdit:true}});
 }
 
 Note = mongoose.model('Note', NoteSchema)
