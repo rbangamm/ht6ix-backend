@@ -2,10 +2,14 @@
   "name": "node-api",
   "main": "api/main.js",
   "dependencies": {
+    "bcrypt": "^3.0.0",
     "body-parser": "~1.0.1",
+    "crypto": "^1.0.1",
     "express": "~4.0.0",
+    "express-session": "^1.15.6",
     "mongoose": "^5.2.9",
-    "nodemon": "^1.18.3"
+    "nodemon": "^1.18.3",
+    "password-hash": "^1.2.2"
   },
   "devDependencies": {
     "nodemon": "^1.18.3"
