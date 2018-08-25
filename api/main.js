@@ -2,8 +2,7 @@ const express    = require('express');
 const app        = express(); 
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt')
-const session = require('express-session')
+const session = require('express-session');
 
 const User = require('../app/models/user');
 const Note = require('../app/models/note');
@@ -16,17 +15,23 @@ app.use(session({
     saveUninitialized: false
 }));
 
-let port = process.env.PORT || 8080;
+let allowCrossDomain = function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+}
+app.use(allowCrossDomain);
+
+let port = process.env.PORT || 3000;
 
 const router = express.Router();         
 
 app.use('/api', router);
 
-mongoose.connect('mongodb://127.0.0.1:27017')/*.then(function(){
+mongoose.connect('mongodb://127.0.0.1:27017').then(function(){
     app.listen(port);
-}).catch(console.log);*/
-
-app.listen(port)
+}).catch(console.log);
 
 console.log('Listening on port ' + port);
 
@@ -41,10 +46,8 @@ router.post('/login', function(req, res) {
         if (err) {
             res.status(400).json({message:err.message});
         }
-        if (user) {
-            req.session.userId = user._id;
-            res.json({message:'Logged in'});
-        }
+        req.session.userId = user._id;
+        res.json({message:'Logged in'});
     });
 });
 
@@ -84,14 +87,27 @@ router.route('/notes').post(function(req, res) {
     })
 });
 
+//Get list of notes for a user
 router.route('/notes').get(function(req, res) {
     if (!req.session) {
         res.status(401).json({message:'Not authenticated'});
     }
-    notes = Note.get_notes(req.session.userId, function(err, notes){
+    notes = Note.getNotes(req.session.userId, function(err, notes){
         if (err) {
             res.status(400).json({message:err.message});
         }
         res.status(200).json({message:notes});
+    });
+});
+ 
+router.route('/notes/:note_id').get(function(req, res) {
+    if (!req.session) {
+        res.status(401).json({message:'Not authenticated'});
+    }
+    Note.getNoteFromID(req.params.note_id, function(err, note) {
+        if (err) {
+            res.status(400).json({message:err.message});
+        }
+        res.status(200).json({message:note});
     });
 });

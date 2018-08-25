@@ -16,13 +16,23 @@ NoteSchema.pre('save', function(next) {
     next();
 });
 
-NoteSchema.statics.get_notes = function(user_id, callback) {
-    Note.findSome({}, {user_id:user_id})
+NoteSchema.statics.getNotes = function(user_id, callback) {
+    Note.find({user_id:user_id})
     .exec(function(err, notes) {
         if (err) {
             return callback(err);
         }
-        return callback(err, notes);
+        return callback(null, notes);
+    });
+}
+
+NoteSchema.statics.getNoteFromID = function(note_id, callback) {
+    Note.findOne({_id:note_id})
+    .exec(function(err, notes) {
+        if (err) {
+            return callback(err);
+        }
+        return callback(null, note)
     });
 }
 
