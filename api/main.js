@@ -37,9 +37,9 @@ router.get('/', function(req, res) {
 
 //Authenticate login
 router.post('/login', function(req, res) {
-    User.authenticate(req.body.username, req.body.password, function(err, user) {
+    User.authenticate(req.body.email, req.body.password, function(err, user) {
         if (err) {
-            res.status(401).json({message : 'Login failed'})
+            res.status(400).json({message:err.message});
         }
         if (user) {
             req.session.userId = user._id;
@@ -51,15 +51,35 @@ router.post('/login', function(req, res) {
 //Sign up
 router.route('/users').post(function(req, res) {
     let user = new User();
-    user.username = req.body.username;
+    user.email = req.body.email;
+    if (req.body.password.length <= 8) {
+        res.status(400).json({message:'Password too short'});
+    }
     user.password_hash = req.body.password;
     user.first_name = req.body.first_name;
     user.last_name = req.body.last_name;
     user.phone_number = req.body.phone_number;
-    user.email = req.body.email;
     user.save(function(err) {
         if (err)
-            res.send(err);
-        res.json({message: 'Created new user ' + user.username + '!'});
+            res.status(400).json(err);
+        res.status(200).json({message: 'Created new user ' + user.username + '!'});
     });
+});
+
+//Create new note
+router.route('/notes').post(function(req, res) {
+    if (!req.session) {
+        res.status(401).json({message:'Not authenticated'})
+    }
+    let note = new Note();
+    note.body = req.body.body;
+    note.date = req.body.date;
+    note.user_id = req.session.userId
+
+    note.save(function(err) {
+        if (err) {
+            res.status(400).json(err);
+        }
+        res.status(200).json({message:'Created new note for ' + note.date + '!'});
+    })
 });

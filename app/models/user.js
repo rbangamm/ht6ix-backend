@@ -3,12 +3,11 @@ const bcrypt = require('bcrypt')
 const Schema = mongoose.Schema;
 
 var UserSchema = new Schema({
-    username: String,
     password_hash: String,
     first_name: String,
     last_name: String,
     phone_number: String,
-    email: String
+    email: {type: String, unique: true}
 });
 
 UserSchema.pre('save', function(next) {
@@ -22,8 +21,8 @@ UserSchema.pre('save', function(next) {
     });
 });
 
-UserSchema.statics.authenticate = function (username, password, callback) {
-    User.findOne({username:username})
+UserSchema.statics.authenticate = function (email, password, callback) {
+    User.findOne({email:email})
     .exec(function(err, user) {
         if (err) {
             return callback(err)
@@ -36,7 +35,9 @@ UserSchema.statics.authenticate = function (username, password, callback) {
             if (result == true) {
                 return callback(null, user);
             } else {
-                return callback()
+                err = new Error('Invalid credentials');
+                err.status = 400;
+                return callback(err)
             }
         });
     });
