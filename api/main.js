@@ -8,7 +8,19 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const moment = require('moment');
 const config = require('../api/config')
+const { execFile } = require("child_process");
+const pythonProc = execFile('python', ["./TextAnalysis/predict.py", "Hey I'm sad. I need help."], (error, stdout, stderr) => {
+    console.log('Output');
+    console.log(stdout);
+});
+// pythonProc.stdout.on('data', (data) => {
+//     console.log(`stdout: ${data}`);
+//   });
+// pythonProc.on('close', (code) => {
+//     console.log('DONE');
+// })
 
+// var PythonShell = require('python-shell')
 
 const User = require('../app/models/user');
 const Note = require('../app/models/note');
@@ -22,6 +34,19 @@ app.use(session({
     saveUninitialized: false
 }));
 
+// PythonShell.run('../TextAnalysis/predict,py',(err, results)=>{
+//     pyshell.send("Help me. I am sad and lonely");
+// })
+
+const addSentimentMiddleware = (req, res, next) => {
+    const pythonProc = execFile('python', ["./TextAnalysis/predict.py", '"' + req.ody.body + '"'], (error, stdout, stderr) => {
+        let score = stdout.substring(2, stdout.length - 2);
+        console.log(`Got score of ${score}`);
+        req.body.score = score;
+        next();
+    });
+}
+
 let port = process.env.PORT || 3000;
 
 const router = express.Router();         
@@ -31,6 +56,11 @@ app.use('/api', router);
 mongoose.connect('mongodb://127.0.0.1:27017').then(function(){
     app.listen(port);
 }).catch(console.log);
+
+pythonProc.stdout.on('data', (data) => {
+    console.log('Recieved data');
+    console.log(data);
+});
 
 console.log('Listening on port ' + port);
 
@@ -78,7 +108,7 @@ router.route('/users').post(function(req, res) {
 });
 
 //Create new note
-router.route('/notes').post(function(req, res) {
+router.route('/notes').post(addSentimentMiddleware, function(req, res) {
 
     let token = req.headers['x-access-token'];
     if (!token) return res.status(401).send({auth:false, message:'No token'});
@@ -88,6 +118,7 @@ router.route('/notes').post(function(req, res) {
     let note = new Note();
     note.body = req.body.body;
     note.date = req.body.date;
+    note.score = req.body.score;
     console.log(token);
     User.getUserIDFromToken(token, function(err, user) {
         if (err) {
@@ -169,13 +200,13 @@ router.route('/notes/:noteId').get(function(req, res) {
     });
 });
 
-router.route('/notes/:noteId').put(function(req, res) {
+router.route('/notes/:noteId').put(addSentimentMiddleware, function(req, res) {
     let token = req.headers['x-access-token'];
     if (!token) return res.status(401).send({auth:false, message:'No token'});
     jwt.verify(token, config.secret, function(err, decoded) {
         if (err) return res.status(401).send({auth: false, message:'Failed to authenticate'});
     });
-    Note.updateNote(req.params.noteId, req.body.body, function(err) {
+    Note.updateNote(req.params.noteId, req.body.body, req.body.score, function(err) {
         if(err) {
             res.status(400).json({message:err.message});
         } else {
