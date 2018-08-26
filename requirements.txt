@@ -10,11 +10,15 @@ grpcio==1.13.0
 h5py==2.8.0
 icon==0.0.3
 idna==2.7
+IndicoIo==1.1.5
 kiwisolver==1.0.1
 Markdown==2.6.11
 matplotlib==2.2.3
+msgpack==0.5.6
+msgpack-numpy==0.4.3.1
 numpy==1.15.0
 pandas==0.23.4
+Pillow==5.2.0
 praw==6.0.0
 prawcore==1.0.0
 protobuf==3.6.0

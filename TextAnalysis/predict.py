@@ -35,8 +35,9 @@ def main():
 	prediction = loaded_model.predict(index_array)
 
 	collection = Collection("Depression_Classifier")
-	prediction_indico = collection.predict(sys.argv[1])
-	print((prediction + prediction_indico)/2)
+	#prediction_indico = collection.predict(sys.argv[1])
+	print(prediction)
+	#print((prediction + prediction_indico)/2)
 	sys.stdout.flush()
 
 
