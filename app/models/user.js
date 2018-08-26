@@ -6,7 +6,8 @@ var UserSchema = new Schema({
     password_hash: String,
     name: String,
     phoneNumber: String,
-    email: {type: String, unique: true}
+    email: {type: String, unique: true},
+    token: String
 });
 
 UserSchema.pre('save', function(next) {
@@ -39,6 +40,17 @@ UserSchema.statics.authenticate = function (email, password, callback) {
                 return callback(err)
             }
         });
+    });
+}
+
+UserSchema.statics.getUserIDFromToken = function(token, callback) {
+    User.findOne({token:token})
+    .exec(function(err, user) {
+        if (err) {
+            return callback(err);
+        } else {
+            return callback(null, user);
+        }
     });
 }
 

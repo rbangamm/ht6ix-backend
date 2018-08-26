@@ -66,12 +66,13 @@ router.route('/users').post(function(req, res) {
     user.password_hash = req.body.password;
     user.name = req.body.name;
     user.phoneNumber = req.body.phoneNumber;
+    let token = jwt.sign({id:user._id}, config.secret, {
+        expiresIn: 86400
+    });
+    user.token = token;
     user.save(function(err) {
         if (err)
             res.status(400).json(err);
-        let token = jwt.sign({id:user._id}, config.secret, {
-            expiresIn: 86400
-        });
         res.status(200).json({message: 'Created new user ' + user.email + '!', token: token, auth: true, name:user.name});
     });
 });
@@ -88,37 +89,41 @@ router.route('/notes').post(function(req, res) {
     note.body = req.body.body;
     note.date = req.body.date;
     console.log(token);
-    note.userId = token.id;
-    let today = new Date();
-    console.log('Today ' + today);
-    console.log('From note ' + moment(req.body.date));
-    let dd = today.getDate();
-    let mm = today.getMonth() + 1;
-    let yyyy = today.getFullYear();
-
-    if (dd < 10) {
-        dd = '0' + dd;
-    }
-    if (mm < 10) {
-        mm = '0' + mm;
-    }
-    
-    today = dd + '/' + mm + '/' + yyyy;
-
-    if (moment(req.body.date).format("YYYY-MM-DD") === today) {
-        note.canEdit = true;
-    } else {
-        note.canEdit = false;
-    }
-
-    Note.updateRecentNote(req.body.date);
-
-    note.save(function(err) {
+    User.getUserIDFromToken(token, function(err, user) {
         if (err) {
-            res.status(400).json(err);
+            res.status(400).json({message:err.message});
         }
-        res.status(200).json({message:'Created new note for ' + note.date + '!'});
-    })
+        let today = new Date();
+        console.log('From note ' + moment(req.body.date));
+        let dd = today.getDate();
+        let mm = today.getMonth() + 1;
+        let yyyy = today.getFullYear();
+
+        if (dd < 10) {
+            dd = '0' + dd;
+        }
+        if (mm < 10) {
+            mm = '0' + mm;
+        }
+        
+        today = dd + '-' + mm + '-' + yyyy;
+        console.log('Today ' + today);
+
+        if (moment(req.body.date).format("DD-MM-YYYY") === today) {
+            note.canEdit = true;
+        } else {
+            note.canEdit = false;
+        }
+
+        Note.updateRecentNote(req.body.date);
+
+        note.save(function(err) {
+            if (err) {
+                res.status(400).json(err);
+            }
+            res.status(200).json({message:note});
+        })
+    });
 });
 
 //Get list of notes for a user
@@ -128,20 +133,25 @@ router.route('/notes').get(function(req, res) {
     jwt.verify(token, config.secret, function(err, decoded) {
         if (err) return res.status(401).send({auth: false, message:'Failed to authenticate'});
     });
-    notes = Note.getNotes(req.session.userId, function(err, notes){
+    User.getUserIDFromToken(token, function(err, user) {
         if (err) {
             res.status(400).json({message:err.message});
         }
-        arr = [...notes];
-        arr.forEach(function(element) {
-            if (element['body'].length >= 40) {
-                element['body'] = element['body'].substring(0, 40) + '...';
-            } else {
-                element['body'] = element['body'].substring(0, 40);
+        notes = Note.getNotes(user._id, function(err, notes){
+            if (err) {
+                res.status(400).json({message:err.message});
             }
+            arr = [...notes];
+            arr.forEach(function(element) {
+                if (element['body'].length >= 40) {
+                    element['body'] = element['body'].substring(0, 40) + '...';
+                } else {
+                    element['body'] = element['body'].substring(0, 40);
+                }
+            });
+            arr.reverse();
+            res.status(200).json(arr);
         });
-        arr.reverse();
-        res.status(200).json(arr);
     });
 });
  
@@ -165,5 +175,11 @@ router.route('/notes/:noteId').put(function(req, res) {
     jwt.verify(token, config.secret, function(err, decoded) {
         if (err) return res.status(401).send({auth: false, message:'Failed to authenticate'});
     });
-
+    Note.updateNote(req.params.noteId, req.body.body, function(err) {
+        if(err) {
+            res.status(400).json({message:err.message});
+        } else {
+            res.status(200).json({message:'Updated note'});
+        }
+    })
 });

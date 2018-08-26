@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 
 const NoteSchema = new Schema({
     body: String,
-    date: { type: Date, unique: true},
+    date: String,
     userId: String,
     canEdit: Boolean
 })
@@ -40,6 +40,17 @@ NoteSchema.statics.getNoteFromID = function(noteId, callback) {
 NoteSchema.statics.updateRecentNote = function(date) {
     Note.update({date:{$ne:date}}, {$set: {canEdit:false}});
     Note.update({date:date}, {$set: {canEdit:true}});
+}
+
+NoteSchema.statics.updateNote = function(noteId, body, callback) {
+    Note.update({_id:noteId}, {$set: {body:body}})
+    .exec(function(err) {
+        if (err) {
+            return (err);
+        } else {
+            return (null);
+        }
+    });
 }
 
 Note = mongoose.model('Note', NoteSchema)
