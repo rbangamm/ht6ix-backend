@@ -50,7 +50,7 @@ router.post('/login', function(req, res) {
             let token = jwt.sign({id:user._id}, config.secret, {
                 expiresIn: 86400
             });
-            res.json({message:'Logged in', token: token, auth: true});
+            res.json({message:'Logged in', token: token, auth: true, name:user.name});
         }
     });
 });
@@ -72,7 +72,7 @@ router.route('/users').post(function(req, res) {
         let token = jwt.sign({id:user._id}, config.secret, {
             expiresIn: 86400
         });
-        res.status(200).json({message: 'Created new user ' + user.email + '!', token: token, auth: true});
+        res.status(200).json({message: 'Created new user ' + user.email + '!', token: token, auth: true, name:user.name});
     });
 });
 
@@ -140,6 +140,7 @@ router.route('/notes').get(function(req, res) {
                 element['body'] = element['body'].substring(0, 40);
             }
         });
+        arr.reverse();
         res.status(200).json(arr);
     });
 });
