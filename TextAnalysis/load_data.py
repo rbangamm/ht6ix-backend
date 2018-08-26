@@ -4,39 +4,39 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sklearn
 import pandas as pd
+import json
 from sklearn.model_selection import train_test_split
-depression_data = pd.read_csv('depressionSubreddit.csv', sep=',', header=None, encoding='utf-8')
-depression_data.dropna()
-#print(depression_data)
-print(depression_data.shape)
-tweet_data = pd.read_csv('decodedTweets.csv', sep=',',header=None)
-data = depression_data.append(tweet_data)
 
-x = data[:][0]
-y = data[:][1]
-
-tokenizer = keras.preprocessing.text.Tokenizer(num_words=10000)
-tokenizer.fit_on_texts(x)
-dictionary = tokenizer.word_index
-print('Done fit!')
-allWordIndices = []
-#test_allWordIndices = []
-for text in x:
-	wordIndices = convert_text_to_index_array(text)
-	allWordIndices.append(wordIndices)
-print(allWordIndices[0])
-# for text in x:
-# 	wordIndices = convert_text_to_index_array(text)
-# 	test_allWordIndices.append(wordIndices)
-
-allWordIndices = np.asarray(allWordIndices)
-#test_allWordIndices = np.asarray(test_allWordIndices)
-
-x_train, x_test, labels_train, labels_test = sklearn.model_selection.train_test_split(allWordIndices, y, test_size = 0.2, random_state=42)
-
-x_train = keras.preprocessing.sequence.pad_sequences(allWordIndices, value=0, padding='post', maxlen=256)
-x_test = keras.preprocessing.sequence.pad_sequences(test_allWordIndices, value=0, padding='post', maxlen=256)
-np.save("processedData.npy",np.array(x_train, labels_train), (x_test, labels_test),)
+dictionary = {}
 
 def convert_text_to_index_array(text):
-	return [dictionary[word] for word in keras.preprocessing.text.text_to_word_sequence(text)]
+	arr = [dictionary.get(word) for word in keras.preprocessing.text.text_to_word_sequence(text)]
+	return [x if x is not None else 0 for x in arr]
+
+def load_data():
+	data = pd.read_csv('decodedTweets.csv', sep=',', dtype={"Text":object, "Value":np.int32})
+	#print(depression_data)
+	data = data.values
+
+	train_x = [str(x[0]) for x in data]
+	train_y	= [x[1] for x in data]
+
+	tokenizer = keras.preprocessing.text.Tokenizer(num_words=10000, oov_token=0)
+	tokenizer.fit_on_texts(train_x)
+	dictionary = tokenizer.word_index
+
+	with open('dictionary.json', 'w') as dictionary_file:
+    		json.dump(dictionary, dictionary_file)
+
+	allWordIndices = []
+	for i in train_x:
+		text = str(i)
+		wordIndices = convert_text_to_index_array(text)
+		allWordIndices.append(wordIndices)
+
+	allWordIndices = np.asarray(allWordIndices)
+	allWordIndices = keras.preprocessing.sequence.pad_sequences(allWordIndices, value=0, padding='post', maxlen=256)
+
+	x_train, x_test, labels_train, labels_test = sklearn.model_selection.train_test_split(allWordIndices, train_y, test_size=0.2, random_state=42)
+
+	return (x_train, labels_train), (x_test, labels_test)
