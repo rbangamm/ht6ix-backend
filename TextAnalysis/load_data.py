@@ -21,7 +21,7 @@ def load_data():
 	train_x = [str(x[0]) for x in data]
 	train_y	= [x[1] for x in data]
 
-	tokenizer = keras.preprocessing.text.Tokenizer(num_words=10000, oov_token=0)
+	tokenizer = keras.preprocessing.text.Tokenizer(num_words=15000, oov_token=0)
 	tokenizer.fit_on_texts(train_x)
 	dictionary = tokenizer.word_index
 

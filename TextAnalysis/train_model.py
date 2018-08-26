@@ -9,25 +9,28 @@ from load_data import load_data
 	
 (train_data, y_train), (x_test, y_test) = load_data()
 model = keras.Sequential()
-model.add(keras.layers.Embedding(10000, 64, input_length=256))
+model.add(keras.layers.Embedding(15000, 64, input_length=256))
 model.add(keras.layers.Conv1D(32,2, activation='relu'))
 model.add(keras.layers.MaxPooling1D(pool_size=4))
 model.add(keras.layers.Dropout(0.4))
 model.add(keras.layers.GlobalAveragePooling1D())
 #model.add(keras.layers.Flatten())
-model.add(keras.layers.Dense(256, activation='relu'))
-model.add(keras.layers.Dropout(0.4))
+model.add(keras.layers.Dense(512, activation='relu'))
+model.add(keras.layers.Dropout(0.25))
 model.add(keras.layers.Dense(128, activation='relu'))
-model.add(keras.layers.Dropout(0.4))
-model.add(keras.layers.Dense(1, activation='sigmoid'))
+model.add(keras.layers.Dropout(0.25))
+model.add(keras.layers.Dense(1, activation='softmax'))
 
 model.summary()
 
 model.compile(optimizer=keras.optimizers.Adam(), loss='binary_crossentropy', metrics=['accuracy'])
 
-history = model.fit(train_data, y_train, epochs=3, batch_size=512, validation_data=(x_test, y_test))
+history = model.fit(train_data, y_train, epochs=2, batch_size=512, validation_data=(x_test, y_test))
 
-model.save('convolutional_trained_model.h5')
+model_json = model.to_json()
+with open("conv_model.json", "w") as json_file:
+    json_file.write(model_json)
+model.save_weights("conv_model_weight.h5")
 
 test_loss, test_acc = model.evaluate(x_test,y_test)
 
