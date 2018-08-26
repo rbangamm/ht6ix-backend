@@ -6,7 +6,8 @@ const NoteSchema = new Schema({
     body: String,
     date: String,
     userId: String,
-    canEdit: Boolean
+    canEdit: Boolean,
+    score: Number
 })
 
 NoteSchema.pre('save', function(next) {
@@ -42,8 +43,8 @@ NoteSchema.statics.updateRecentNote = function(date) {
     Note.update({date:date}, {$set: {canEdit:true}});
 }
 
-NoteSchema.statics.updateNote = function(noteId, body, callback) {
-    Note.update({_id:noteId}, {$set: {body:body}})
+NoteSchema.statics.updateNote = function(noteId, body, score, callback) {
+    Note.update({_id:noteId}, {$set: {body:body,score}})
     .exec(function(err) {
         if (err) {
             return (err);
