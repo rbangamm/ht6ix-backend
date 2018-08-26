@@ -9,6 +9,7 @@ import os
 #indicoio.config.api_key = '3403eabc00db0763fda679fb224111be'
 print(os.getcwd())
 with open("./TextAnalysis/dictionary.json",'r') as dict_file:
+
 	dictionary=json.load(dict_file)
 
 def text_to_index_array(text):
