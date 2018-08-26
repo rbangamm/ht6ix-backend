@@ -4,8 +4,8 @@ from tensorflow import keras
 import h5py
 import sys
 import json
-from indicoio.custom import Collection
-indicoio.config.api_key = '3403eabc00db0763fda679fb224111be'
+#from indicoio.custom import Collection
+#indicoio.config.api_key = '3403eabc00db0763fda679fb224111be'
 
 with open("dictionary.json",'r') as dict_file:
 	dictionary=json.load(dict_file)
@@ -34,7 +34,7 @@ def main():
 	loaded_model.compile(optimizer=keras.optimizers.Adam(), loss='binary_crossentropy', metrics=['accuracy'])
 	prediction = loaded_model.predict(index_array)
 
-	collection = Collection("Depression_Classifier")
+	#collection = Collection("Depression_Classifier")
 	#prediction_indico = collection.predict(sys.argv[1])
 	print(prediction)
 	#print((prediction + prediction_indico)/2)
