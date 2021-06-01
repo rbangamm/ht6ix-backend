@@ -37,6 +37,6 @@ termcolor==1.1.0
 twitter==1.18.0
 unicode==2.6
 update-checker==0.16
-urllib3==1.24.2
+urllib3==1.26.5
 Werkzeug==0.15.3
 youtube-dl==2015.7.4
