@@ -21,7 +21,7 @@ pandas==0.23.4
 Pillow==6.2.0
 praw==6.0.0
 prawcore==1.0.0
-protobuf==3.6.0
+protobuf==3.15.0
 pyparsing==2.2.0
 python-dateutil==2.7.3
 pytz==2018.5
