@@ -16,7 +16,7 @@ Markdown==2.6.11
 matplotlib==2.2.3
 msgpack==0.5.6
 msgpack-numpy==0.4.3.1
-numpy==1.15.0
+numpy==1.22.0
 pandas==0.23.4
 Pillow==6.2.0
 praw==6.0.0
